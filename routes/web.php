@@ -25,6 +25,8 @@ Route::group(['prefix' => '/teachers', 'middleware' => ['auth', 'allow:teacher']
     Route::get('/tests/add', [App\Http\Controllers\Teachers\TestController::class, 'add'])->name('tests.add');
     Route::post('/tests/add', [App\Http\Controllers\Teachers\TestController::class, 'store'])->name('tests.store');
     Route::get('/tests/results', [App\Http\Controllers\Teachers\TestController::class, 'results'])->name('tests.results');
+    Route::get('/tests/results/view/{id}', [App\Http\Controllers\Teachers\TestController::class, 'view'])->name('tests.results.view');
+    Route::post('/tests/delete', [App\Http\Controllers\Teachers\TestController::class, 'delete'])->name('tests.delete');
 });
 
 Route::group(['prefix' => '/students', 'middleware' => ['auth', 'allow:student'], 'as' => 'students.'], function () {
@@ -33,4 +35,5 @@ Route::group(['prefix' => '/students', 'middleware' => ['auth', 'allow:student']
     Route::get('/tests/take/{id}', [App\Http\Controllers\Students\TestController::class, 'take'])->name('tests.take');
     Route::post('/tests/take/{id}', [App\Http\Controllers\Students\TestController::class, 'store'])->name('tests.store');
     Route::get('/tests/results', [App\Http\Controllers\Students\TestController::class, 'results'])->name('tests.results');
+    Route::get('/tests/results/view/{id}', [App\Http\Controllers\Students\TestController::class, 'view'])->name('tests.results.view');
 });

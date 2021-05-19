@@ -41,6 +41,7 @@ class TestController extends Controller
             $result->marks = $test->questions->sum('marks');
 
             $student_test = StudentTest::where('test_id', $test->id)->first();
+            $result->student_test_id = $student_test->id;
             $result->student_name = $student_test->student->name;
             $result->created_at = $student_test->created_at->diffForHumans();
             $result->marks_obtained = 0;
@@ -49,6 +50,42 @@ class TestController extends Controller
             return $result;
         });
         return view('teachers.tests.results', ['tests' => $tests]);
+    }
+
+    public function view(Request $request, $id)
+    {
+        $student_test = StudentTest::findOrFail($id);
+
+        $test = new stdClass;
+
+        $test->id = $student_test->test_id;
+        $test->title = $student_test->test->test_title;
+        $test->student_name = $student_test->student->name;
+
+        $test->questions = $student_test->questions->transform(function ($question) {
+            $result = new stdClass;
+            $result->id = $question->question_id;
+            $result->question = $question->question->question;
+            $result->marks = $question->question->marks;
+            $result->your_answer = $question->answer;
+            $result->correct_answer = $question->question->correct_answer;
+            $result->marks_obtained = $question->marks();
+            return $result;
+        });
+
+        $test->total_marks = collect($test->questions)->sum('marks_obtained');
+
+        return view('teachers.tests.view', ['test' => $test]);
+    }
+
+    public function delete(Request $request)
+    {
+        $id = $request->get('id', 0);
+        $test = Test::findOrFail($id);
+        $test->delete();
+
+        $request->session()->flash('status', 'Test deleted successfully');
+        return redirect()->route('teachers.tests.index');
     }
 
     public function add()
@@ -79,7 +116,7 @@ class TestController extends Controller
 
             DB::commit();
 
-            $request->session()->flash('status', 'Question added successfully');
+            $request->session()->flash('status', 'Test added successfully');
             return redirect()->route('teachers.tests.index');
         }
         catch (Exception $ex) {

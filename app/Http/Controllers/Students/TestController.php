@@ -44,6 +44,7 @@ class TestController extends Controller
             $result->marks = $test->questions->sum('marks');
 
             $student_test = StudentTest::where('test_id', $test->id)->first();
+            $result->student_test_id = $student_test->id;
             $result->created_at = $student_test->created_at->diffForHumans();
             $result->marks_obtained = 0;
             foreach($student_test->questions as $q) $result->marks_obtained += $q->marks();
@@ -57,6 +58,31 @@ class TestController extends Controller
     {
         $test = Test::findOrFail($id);
         return view('students.tests.take-test', ['test' => $test]);
+    }
+
+    public function view(Request $request, $id)
+    {
+        $student_test = StudentTest::findOrFail($id);
+
+        $test = new stdClass;
+
+        $test->id = $student_test->test_id;
+        $test->title = $student_test->test->test_title;
+
+        $test->questions = $student_test->questions->transform(function ($question) {
+            $result = new stdClass;
+            $result->id = $question->question_id;
+            $result->question = $question->question->question;
+            $result->marks = $question->question->marks;
+            $result->your_answer = $question->answer;
+            $result->correct_answer = $question->question->correct_answer;
+            $result->marks_obtained = $question->marks();
+            return $result;
+        });
+
+        $test->total_marks = collect($test->questions)->sum('marks_obtained');
+
+        return view('students.tests.view', ['test' => $test]);
     }
 
     public function store(Request $request, $id)
